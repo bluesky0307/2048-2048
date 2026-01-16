@@ -1,0 +1,16 @@
+{
+  "name": "2048 Blue Swipe",
+  "short_name": "2048 Blue",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#e3f2fd",
+  "theme_color": "#90caf9",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

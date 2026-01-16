@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2048 Blue</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#90caf9">
+
+<style>
+:root{
+ --bg:#e6f2ff;
+ --board:#b3d9ff;
+ --empty:#dbeeff;
+ --text:#03396c;
+
+ --btn:#3399ff;
+ --btn-text:#ffffff;
+
+ --t2:#e6f7ff;
+ --t4:#cceeff;
+ --t8:#99ddff;
+ --t16:#66ccff;
+ --t32:#33bbff;
+ --t64:#0099ff;
+ --t128:#007acc;
+ --t256:#005c99;
+ --t512:#003d66;
+ --t1024:#00264d;
+ --t2048:#001933;
+ 
+/* existing vars */
+
+ --bg-img:url("./Images/blue-bg.jpg");
+ --bg-overlay:rgba(255,255,255,0.15);
+}
+
+body{
+ margin:0;
+ height:100vh;
+ font-family:Arial, sans-serif;
+ color:var(--text);
+ display:flex;
+ justify-content:center;
+ align-items:center;
+
+ background:
+  linear-gradient(var(--bg-overlay), var(--bg-overlay)),
+  var(--bg-img),
+  linear-gradient(135deg, var(--bg), var(--board));
+
+ background-size:cover;
+ background-position:center;
+ background-repeat:no-repeat;
+ transition:background 0.4s ease;
+}
+
+.screen{
+ display:none;
+ width:100%;
+ height:100%;
+ text-align:center;
+}
+
+.active{
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ align-items:center;
+}
+
+button{
+ padding:14px 24px;
+ margin:8px;
+ border:none;
+ border-radius:14px;
+ background:var(--btn);
+ color:var(--btn-text);
+ font-size:1em;
+}
+
+/* BOARD */
+#board{
+ width:min(90vw,320px);
+ height:min(90vw,320px);
+ background:var(--board);
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:8px;
+ padding:8px;
+ border-radius:18px;
+ box-sizing:border-box;
+}
+
+.tile{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-weight:bold;
+ font-size:24px;
+ border-radius:12px;
+ min-height:60px;
+ background:var(--empty);
+}
+
+/* TILE COLORS */
+.tile-2{background:var(--t2)}
+.tile-4{background:var(--t4)}
+.tile-8{background:var(--t8)}
+.tile-16{background:var(--t16)}
+.tile-32{background:var(--t32)}
+.tile-64{background:var(--t64);color:white}
+.tile-128{background:var(--t128);color:white}
+.tile-256{background:var(--t256);color:white}
+.tile-512{background:var(--t512);color:white}
+.tile-1024{background:var(--t1024);color:white}
+.tile-2048{background:var(--t2048);color:white}
+
+/* THEMES */
+.theme-pink{
+ --bg:#ffe6f0;
+ --board:#ffb3d1;
+ --empty:#ffd6e8;
+ --text:#660033;
+
+ --btn:#ff4d94;
+
+ --t2:#ffe6f0;
+ --t4:#ffccdf;
+ --t8:#ff99c2;
+ --t16:#ff66a3;
+ --t32:#ff3385;
+ --t64:#ff0066;
+ --t128:#cc0052;
+ --t256:#99003d;
+ --t512:#660028;
+ --t1024:#4d001e;
+ --t2048:#330014;
+ 
+  --bg-img:url("./Images/pink-bg.jpg");
+}
+
+.theme-green{
+ --bg:#e6fff2;
+ --board:#b3ffd9;
+ --empty:#d6ffee;
+ --text:#00331a;
+
+ --btn:#33cc99;
+
+ --t2:#e6fff2;
+ --t4:#ccffe6;
+ --t8:#99ffcc;
+ --t16:#66ffb3;
+ --t32:#33ff99;
+ --t64:#00cc7a;
+ --t128:#00995c;
+ --t256:#00663d;
+ --t512:#004d2e;
+ --t1024:#00331f;
+ --t2048:#001a10;
+ 
+ --bg-img:url("./Images/green-bg.jpg");
+}
+
+.theme-dark{
+ --bg:#121212;
+ --bg-overlay:rgba(0,0,0,0.4);
+ --board:#1e1e1e;
+ --empty:#2a2a2a;
+ --text:#ffffff;
+
+ --btn:#333333;
+ --btn-text:#ffffff;
+
+ --t2:#2a2a2a;
+ --t4:#3a3a3a;
+ --t8:#4a4a4a;
+ --t16:#5a5a5a;
+ --t32:#6a6a6a;
+ --t64:#7a7a7a;
+ --t128:#8a8a8a;
+ --t256:#9a9a9a;
+ --t512:#aaaaaa;
+ --t1024:#bbbbbb;
+ --t2048:#ffd700;
+ 
+ --bg-img:url("./Images/dark-bg.jpg");
+ --bg-overlay: rgba(0,0,0,0.4); 
+}
+
+/* OVERLAYS */
+.overlay{
+ position:fixed;
+ inset:0;
+ background:rgba(0,0,0,.6);
+ color:white;
+ display:none;
+ justify-content:center;
+ align-items:center;
+ flex-direction:column;
+ z-index:10;
+}
+</style>
+</head>
+
+<body>
+    
+
+<!-- LAUNCH -->
+<div id="launch" class="screen active">
+ <h1>2048 🔢</h1>
+ <p>Best Score: <span id="bestL">0</span></p>
+ <button onclick="goGame()">Start</button>
+ <button onclick="show('theme')">Themes</button>
+ <button onclick="show('leaderboard')">Leaderboard</button>
+</div>
+
+<!-- THEME -->
+<div id="theme" class="screen">
+ <h2>Select Theme</h2>
+ <button onclick="setTheme('')">Light Blue</button>
+ <button onclick="setTheme('pink')">Pink</button>
+ <button onclick="setTheme('green')">Green</button>
+ <button onclick="setTheme('dark')">Dark Mode</button>
+ <button onclick="show('launch')">Back</button>
+</div>
+
+<!-- LEADERBOARD -->
+<div id="leaderboard" class="screen">
+ <h2>🏆 Leaderboard</h2>
+ <ol id="scoreList"></ol>
+ <button onclick="show('launch')">Back</button>
+</div>
+
+<!-- GAME -->
+<div id="game" class="screen">
+ <h3>Score: <span id="score">0</span></h3>
+ <p>Best: <span id="bestG">0</span></p>
+ <div id="board"></div>
+ <button onclick="start()">Restart</button>
+ <button onclick="show('launch')">Home</button>
+</div>
+
+<!-- GAME OVER -->
+<div id="gameOver" class="overlay">
+ <h2>Game Over</h2>
+ <button onclick="start()">Restart</button>
+ <button onclick="hideOver();show('launch')">Home</button>
+</div>
+
+<!-- WIN -->
+<div id="win" class="overlay">
+ <h2>You Win! 🎉</h2>
+ <button onclick="hideWin()">Continue</button>
+</div>
+
+<script>
+const boardEl=document.getElementById("board");
+const scoreEl=document.getElementById("score");
+const bestG=document.getElementById("bestG");
+const bestL=document.getElementById("bestL");
+const over=document.getElementById("gameOver");
+const win=document.getElementById("win");
+const scoreList=document.getElementById("scoreList");
+
+let board=[],score=0,won=false,saved=false;
+let best=localStorage.getItem("best2048")||0;
+bestG.textContent=best;
+bestL.textContent=best;
+
+/* SCREEN CONTROL */
+function show(id){
+ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ if(id==="leaderboard") loadScores();
+}
+
+/* THEME */
+function setTheme(t){
+ document.body.className = t ? `theme-${t}` : "";
+ localStorage.setItem("theme2048", t || "blue");
+ show("launch");
+}
+
+/* GAME START */
+function goGame(){
+ show("game");
+ start();
+}
+
+function start(){
+ board=Array(16).fill(0);
+ score=0;
+ won=false;
+ saved=false;
+ hideOver();hideWin();
+ addTile();addTile();
+ draw();
+}
+
+function addTile(){
+ let e=board.map((v,i)=>v==0?i:null).filter(v=>v!==null);
+ if(e.length) board[e[Math.random()*e.length|0]]=Math.random()<.9?2:4;
+}
+
+function draw(){
+ boardEl.innerHTML="";
+ board.forEach(v=>{
+  let d=document.createElement("div");
+  d.className="tile"+(v?` tile-${v}`:"");
+  d.textContent=v||"";
+  boardEl.appendChild(d);
+ });
+
+ scoreEl.textContent=score;
+
+ if(score>best){
+  best=score;
+  localStorage.setItem("best2048",best);
+ }
+ bestG.textContent=best;
+ bestL.textContent=best;
+
+ if(!won && board.includes(2048)){
+  won=true;
+  win.style.display="flex";
+ }
+
+ if(gameOver()){
+  over.style.display="flex";
+  if(!saved){
+   saveScore(score);
+   saved=true;
+  }
+ }
+}
+
+/* SWIPE ONLY */
+let sx,sy;
+boardEl.addEventListener("touchstart",e=>{
+ sx=e.touches[0].clientX;
+ sy=e.touches[0].clientY;
+},{passive:true});
+
+boardEl.addEventListener("touchend",e=>{
+ let dx=e.changedTouches[0].clientX-sx;
+ let dy=e.changedTouches[0].clientY-sy;
+ if(Math.abs(dx)>Math.abs(dy)){
+  if(dx>30) move(1);
+  else if(dx<-30) move(3);
+ }else{
+  if(dy>30) move(2);
+  else if(dy<-30) move(0);
+ }
+});
+
+/* MOVE */
+function move(dir){
+ let moved=false;
+ for(let i=0;i<4;i++){
+  let line=[],idxs=[];
+  for(let j=0;j<4;j++){
+   let idx=[j*4+i,i*4+(3-j),(3-j)*4+i,i*4+j][dir];
+   idxs.push(idx);
+   if(board[idx]) line.push(board[idx]);
+  }
+  for(let k=0;k<line.length-1;k++){
+   if(line[k]==line[k+1]){
+    line[k]*=2;
+    score+=line[k];
+    line.splice(k+1,1);
+   }
+  }
+  while(line.length<4) line.push(0);
+  idxs.forEach((id,n)=>{
+   if(board[id]!=line[n]) moved=true;
+   board[id]=line[n];
+  });
+ }
+ if(moved){addTile();draw();}
+}
+
+/* GAME OVER CHECK */
+function gameOver(){
+ if(board.includes(0)) return false;
+ for(let i=0;i<16;i++){
+  if(i%4<3 && board[i]==board[i+1]) return false;
+  if(i<12 && board[i]==board[i+4]) return false;
+ }
+ return true;
+}
+
+/* LEADERBOARD */
+function saveScore(s){
+ let scores=JSON.parse(localStorage.getItem("scores")||"[]");
+ scores.push(s);
+ scores.sort((a,b)=>b-a);
+ scores=scores.slice(0,5);
+ localStorage.setItem("scores",JSON.stringify(scores));
+}
+
+function loadScores(){
+ let scores=JSON.parse(localStorage.getItem("scores")||"[]");
+ scoreList.innerHTML="";
+ if(!scores.length){
+  scoreList.innerHTML="<li>No scores yet</li>";
+  return;
+ }
+ scores.forEach(s=>{
+  let li=document.createElement("li");
+  li.textContent=s;
+  scoreList.appendChild(li);
+ });
+}
+
+/* OVERLAYS */
+function hideOver(){over.style.display="none";}
+function hideWin(){win.style.display="none";}
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+
+const savedTheme = localStorage.getItem("theme2048") || "blue";
+document.body.className = savedTheme === "blue" ? "" : `theme-${savedTheme}`;
+</script>
+</body>
+</html>
+
